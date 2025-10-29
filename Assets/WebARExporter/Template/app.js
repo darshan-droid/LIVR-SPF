@@ -51,7 +51,7 @@ async function initAR() {
                 requiredFeatures: ['hit-test']
             });
 
-            debugLog("[WebARButton] AR session started ✅");
+            debugLog("[WebARButton] AR session started ");
 
             renderer.xr.setSession(session);
 
@@ -93,24 +93,18 @@ async function initAR() {
     window.addEventListener('touchend', onUserPlace, { passive: true });
     window.addEventListener('click', onUserPlace);
 
-    // create the AR button
-    //const xrButton = WebARButton.createButton(renderer, { requiredFeatures: ['hit-test'] });
-    //document.body.appendChild(xrButton);
-
     renderer.setAnimationLoop(render);
 }
 
 async function setupHitTestSource(session) {
     console.log("[WebAR] setupHitTestSource called");
-
-    // Get a 'viewer' space first (almost always supported)
+    
     const viewerSpace = await session.requestReferenceSpace('viewer');
 
     // Ask AR runtime for hit test source
     hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
     console.log("[WebAR] hitTestSource ready");
 
-    // Now try to get a stable world reference for placing content
     try {
         referenceSpace = await session.requestReferenceSpace('local-floor');
         console.log("[WebAR] referenceSpace 'local-floor' ready");
@@ -183,7 +177,6 @@ function onUserPlace() {
     if (!placedObject) {
         placedObject = gltfRoot.clone(true);
 
-        // adjust this scale if invisible / huge
         placedObject.scale.set(1, 1, 1);
 
         scene.add(placedObject);
