@@ -1,6 +1,13 @@
+using System.Net.NetworkInformation;
 using UnityEngine;
+using UnityEngine.VFX;
 using WebXR;
 using WebXRPlugin;
+
+
+#if UNITY_INPUT_SYSTEM_1_4_4_OR_NEWER
+using UnityEngine.InputSystems;
+#endif
 
 namespace WebXRPlugin
 {
@@ -14,6 +21,9 @@ namespace WebXRPlugin
         private bool placedOnce = false;
         private WebXRManager webxr;
         private GameObject lastPlaced;
+
+        private Vector3 reticlePosition;
+        private Quaternion reticleRotation;
 
         void Awake()
         {
@@ -36,6 +46,13 @@ namespace WebXRPlugin
 
         void OnXRChange(WebXRState state, int views, Rect l, Rect r)
         {
+#if HAS_ROTATION_AND_ROTATION
+            reticle.SetLocalPositionAndRotaion(originPosition, originRotation);
+#else
+            reticle.localPosition = reticlePosition;
+            reticle.localRotation = reticleRotation;
+#endif
+            placePrefab.SetActive(false);
             if (state == WebXRState.AR)
             {
                 Debug.Log("AR mode started — initiating hit test.");
@@ -45,13 +62,18 @@ namespace WebXRPlugin
 
         void OnHitTestUpdate(WebXRHitPoseData pose)
         {
+            placePrefab.SetActive(pose.available);
             if (pose.available)
             {
                 if (!reticle.gameObject.activeSelf)
-                    reticle.gameObject.SetActive(true);
+                    reticle.gameObject.SetActive(true);              
 
-                reticle.localPosition = pose.position;
-                reticle.localRotation = pose.rotation;
+#if HAS_POSITION_AND_ROTATION
+            transform.SetLocalPositionAndRotation(pose.position, pose.rotation);
+#else
+                transform.localPosition = pose.position;
+                transform.localRotation = pose.rotation;
+#endif
             }
             else
             {
@@ -69,14 +91,16 @@ namespace WebXRPlugin
 
             if (!placedOnce)
             {
-                lastPlaced = Instantiate(placePrefab, reticle.position, reticle.rotation, root ? root : null);
+                //lastPlaced = Instantiate(placePrefab, reticle.position, reticle.rotation, root ? root : null);
+                lastPlaced = Instantiate(placePrefab, transform.localPosition, transform.localRotation, root ? root : null);
                 placePrefab.SetActive(false);
                 placedOnce = true;
                 Debug.Log("Object placed.");
             }
             else if (lastPlaced)
             {
-                lastPlaced.transform.SetPositionAndRotation(reticle.position, reticle.rotation);
+                //lastPlaced.transform.SetPositionAndRotation(reticle.position, reticle.rotation);
+                lastPlaced.transform.SetPositionAndRotation(transform.localPosition, transform.localRotation);
                 Debug.Log("Object moved.");
             }
         }
