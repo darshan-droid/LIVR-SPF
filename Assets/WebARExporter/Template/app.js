@@ -1,6 +1,9 @@
 ﻿import * as THREE from './three.module.js';
 import { GLTFLoader } from './GLTFLoader.js';
 import { WebXRButton } from './webxr-button.js';
+import { LivrRuntime } from './Core/LivrRuntime.js';
+import { loadScene } from './Core/LivrSceneLoader.js';
+import { GameSystem } from './Core/GameSystem.js'; }
 
 let scene, camera, renderer;
 let reticle;
@@ -191,5 +194,20 @@ function onUserPlace() {
 
     console.log("[WebAR] placedObject @", placedObject.position);
 }
+
+const SCENE_ID = 'Scene_01';
+
+(async () => {
+    const runtime = new LivrRuntime(SCENE_ID);
+    const { meta, glbScene } = await loadScene(runtime, SCENE_ID);
+
+    // Find player
+    let player = null;
+    glbScene.traverse(o => { if (o.name === 'Player') player = o; });
+
+    const dustGame = new DustGameSystem(player, meta);
+    runtime.addSystem(dustGame);
+    runtime.start();
+})();
 
 initAR();
